@@ -2,9 +2,464 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Fault-Tolerant WebApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AWS Fault-Tolerant Architecture</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0f1419 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        min-height: 100vh;
+        padding: 20px;
+        color: #ffffff;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #a0a0a0;
+        margin-bottom: 50px;
+        font-size: 1.2em;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: 200px 1fr 200px;
+        gap: 40px;
+        align-items: center;
+        margin-bottom: 60px;
+      }
+
+      .external-services {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .aws-cloud {
+        background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+        border-radius: 20px;
+        padding: 40px;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
+      }
+
+      .aws-cloud::before {
+        content: "AWS Cloud";
+        position: absolute;
+        top: -15px;
+        left: 30px;
+        background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .vpc {
+        background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        border-radius: 15px;
+        padding: 30px;
+        position: relative;
+        margin-top: 20px;
+      }
+
+      .vpc::before {
+        content: "VPC - Fault-Tolerant Network";
+        position: absolute;
+        top: -12px;
+        left: 20px;
+        background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        padding: 6px 15px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 0.8em;
+        color: white;
+      }
+
+      .subnets {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .subnet {
+        border-radius: 10px;
+        padding: 20px;
+        position: relative;
+      }
+
+      .public-subnet {
+        background: rgba(69, 183, 209, 0.2);
+        border: 2px solid #45b7d1;
+      }
+
+      .private-subnet {
+        background: rgba(138, 43, 226, 0.2);
+        border: 2px solid #8a2be2;
+      }
+
+      .subnet::before {
+        position: absolute;
+        top: -10px;
+        left: 15px;
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 0.75em;
+      }
+
+      .public-subnet::before {
+        content: "Public Subnet";
+        background: #45b7d1;
+      }
+
+      .private-subnet::before {
+        content: "Private Subnet";
+        background: #8a2be2;
+      }
+
+      .service-box {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .service-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+      }
+
+      .service-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 0.95em;
+      }
+
+      .service-desc {
+        font-size: 0.8em;
+        opacity: 0.8;
+        line-height: 1.3;
+      }
+
+      .external-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin: 10px 0;
+        transition: transform 0.3s ease;
+        box-shadow: 0 10px 25px rgba(118, 75, 162, 0.3);
+      }
+
+      .external-box:hover {
+        transform: scale(1.05);
+      }
+
+      .flow-arrows {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        height: 2px;
+        pointer-events: none;
+      }
+
+      .arrow {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #4ecdc4, transparent);
+        animation: flow 3s ease-in-out infinite;
+      }
+
+      .arrow-left {
+        left: -40px;
+        width: 80px;
+        animation-delay: 0s;
+      }
+
+      .arrow-right {
+        right: -40px;
+        width: 80px;
+        animation-delay: 1.5s;
+      }
+
+      @keyframes flow {
+        0%,
+        100% {
+          opacity: 0;
+          transform: scaleX(0);
+        }
+        50% {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+      }
+
+      .asg-instances {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .instance {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 8px;
+        text-align: center;
+        font-size: 0.7em;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 40px;
+      }
+
+      .feature-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .feature-title {
+        color: #4ecdc4;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+      }
+
+      .feature-list {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .feature-list li {
+        margin: 8px 0;
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .feature-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #4ecdc4;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .architecture {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+
+        .subnets {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          padding: 20px;
+        }
+
+        .title {
+          font-size: 2em;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Welcome to our Fault-Tolerant WebApp!</h1>
+    <div class="container">
+      <h1 class="title">AWS Fault-Tolerant Architecture</h1>
+      <p class="subtitle">
+        High Availability • Cost Optimized • Enterprise Security
+      </p>
+
+      <div class="architecture">
+        <!-- Left Side - External Services -->
+        <div class="external-services">
+          <div class="external-box">
+            <div class="service-title">👥 End Users</div>
+            <div class="service-desc">Global traffic</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">🌐 Route53</div>
+            <div class="service-desc">DNS routing</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">⚡ CloudFront</div>
+            <div class="service-desc">Global CDN</div>
+          </div>
+        </div>
+
+        <!-- Center - AWS Cloud -->
+        <div class="aws-cloud">
+          <div class="vpc">
+            <div class="subnets">
+              <!-- Public Subnet -->
+              <div class="subnet public-subnet">
+                <div class="service-box">
+                  <div class="service-title">🔀 Application Load Balancer</div>
+                  <div class="service-desc">
+                    SSL termination<br />Health checks<br />Traffic distribution
+                  </div>
+                </div>
+              </div>
+
+              <!-- Private Subnet -->
+              <div class="subnet private-subnet">
+                <div class="service-box">
+                  <div class="service-title">📈 Auto Scaling Group</div>
+                  <div class="service-desc">Fault-tolerant instances</div>
+                  <div class="asg-instances">
+                    <div class="instance">EC2-1<br />1vCPU<br />1GB</div>
+                    <div class="instance">EC2-2<br />1vCPU<br />1GB</div>
+                    <div class="instance">EC2-N<br />Auto Scale</div>
+                  </div>
+                </div>
+                <div class="service-box">
+                  <div class="service-title">🔧 Systems Manager</div>
+                  <div class="service-desc">Secure access<br />No SSH keys</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Storage & Services -->
+        <div class="external-services">
+          <div class="external-box">
+            <div class="service-title">🪣 S3 Bucket</div>
+            <div class="service-desc">Images & Assets<br />Durable storage</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">🔐 Certificate Manager</div>
+            <div class="service-desc">Free SSL/TLS<br />Auto-renewal</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">📊 CloudWatch</div>
+            <div class="service-desc">Monitoring<br />Metrics & Logs</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-title">🛡️ Security Features</div>
+          <ul class="feature-list">
+            <li>Private subnet deployment</li>
+            <li>No public IP addresses</li>
+            <li>Systems Manager access</li>
+            <li>VPC network isolation</li>
+            <li>SSL/TLS encryption</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">🚀 Performance & Scaling</div>
+          <ul class="feature-list">
+            <li>Auto Scaling Group</li>
+            <li>Application Load Balancer</li>
+            <li>CloudFront CDN</li>
+            <li>Health check monitoring</li>
+            <li>Multi-AZ deployment</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">💰 Cost Optimization</div>
+          <ul class="feature-list">
+            <li>Right-sized instances (1vCPU, 1GB)</li>
+            <li>Free SSL certificates</li>
+            <li>Pay-as-you-scale model</li>
+            <li>S3 cost-effective storage</li>
+            <li>CloudFront reduces origin load</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">🔧 Management & Operations</div>
+          <ul class="feature-list">
+            <li>Infrastructure as Code (Terraform)</li>
+            <li>Automated deployments</li>
+            <li>CloudWatch monitoring</li>
+            <li>Route53 DNS management</li>
+            <li>Zero-downtime updates</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Add subtle animations to service boxes
+      document.addEventListener("DOMContentLoaded", function () {
+        const serviceBoxes = document.querySelectorAll(".service-box");
+
+        serviceBoxes.forEach((box, index) => {
+          box.style.animationDelay = `${index * 0.1}s`;
+          box.style.animation = "fadeInUp 0.6s ease-out forwards";
+        });
+      });
+
+      // CSS for fade-in animation
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+      document.head.appendChild(style);
+    </script>
   </body>
 </html>
