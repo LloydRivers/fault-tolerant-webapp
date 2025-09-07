@@ -16,7 +16,8 @@ modules=("vpc" "ec2" "alb" "s3" "cloudfront" "route53")
 envs=("dev" "staging" "prod")
 
 # App folder files (relative to parent)
-app_folder="../app"
+# THIS NEXT LINE DID NOT RUN AND THE SCRIPT DID NOT FAIL
+app_folder="app"
 app_files=("index.html")
 
 # Create Terraform root files
