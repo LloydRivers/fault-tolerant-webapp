@@ -7,22 +7,55 @@ module "webapp_vpc" {
   vpc_name           = "webapp-vpc"
 }
 
+module "cdn" {
+  source = "./modules/cloudfront"
+
+  bucket_domain_name  = module.images_bucket.bucket_regional_domain_name
+  aliases             = []
+  default_root_object = "index.html"
+  enabled             = true
+}
+
 module "images_bucket" {
-  source      = "./modules/s3"
-  bucket_name = "my-fault-tolerant-app-images-bucket"
+  source            = "./modules/s3"
+  bucket_name       = "my-fault-tolerant-app-images-bucket"
+  enable_cloudfront = true
 
   objects = [
-    {
-      key    = "uploads/user-avatar-123.jpg"
-      source = "app/assets/images/user-avatar-123.png"
-    },
-    {
-      key    = "uploads/product-photo-456.png"
-      source = "app/assets/images/product-photo-456.png"
-    },
-    {
-      key    = "uploads/banner-image-789.webp"
-      source = "app/assets/images/banner-image-789.png"
-    }
+    { key = "uploads/user-avatar-123.jpg", source = "app/assets/images/user-avatar-123.png" },
+    { key = "uploads/product-photo-456.png", source = "app/assets/images/product-photo-456.png" },
+    { key = "uploads/banner-image-789.webp", source = "app/assets/images/banner-image-789.png" }
   ]
+}
+
+# Add this after your module declarations
+data "aws_iam_policy_document" "cloudfront_s3_access" {
+  statement {
+    sid    = "AllowCloudFrontServicePrincipal"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    resources = [
+      "${module.images_bucket.bucket_arn}/*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [module.cdn.cloudfront_distribution_arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "cloudfront_access" {
+  bucket = module.images_bucket.bucket_id
+  policy = data.aws_iam_policy_document.cloudfront_s3_access.json
 }
