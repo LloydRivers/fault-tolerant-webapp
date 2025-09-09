@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AWS Fault-Tolerant Architecture</title>
+    <link rel="stylesheet" href="./assets/styles/index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">AWS Fault-Tolerant Architecture</h1>
+      <p class="subtitle">
+        High Availability • Cost Optimized • Enterprise Security
+      </p>
+
+      <div class="architecture">
+        <!-- Left Side - External Services -->
+        <div class="external-services">
+          <div class="external-box">
+            <div class="service-title">👥 End Users</div>
+            <div class="service-desc">
+              Request images via<br />CloudFront CDN
+            </div>
+            <div class="user-actions">
+              <span class="action-flow">🖼️ GET /images/photo.jpg</span>
+            </div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">🌐 Route53</div>
+            <div class="service-desc">DNS routing</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">⚡ CloudFront</div>
+            <div class="service-desc">
+              Image CDN endpoint<br />example.cloudfront.net
+            </div>
+          </div>
+        </div>
+
+        <!-- Center - AWS Cloud -->
+        <div class="aws-cloud">
+          <div class="vpc">
+            <div class="subnets">
+              <!-- Public Subnet -->
+              <div class="subnet public-subnet">
+                <div class="service-box">
+                  <div class="service-title">🔀 Application Load Balancer</div>
+                  <div class="service-desc">
+                    SSL termination<br />Health checks<br />Traffic distribution
+                  </div>
+                </div>
+              </div>
+
+              <!-- Private Subnet -->
+              <div class="subnet private-subnet">
+                <div class="service-box">
+                  <div class="service-title">📈 Auto Scaling Group</div>
+                  <div class="service-desc">Web application servers</div>
+                  <div class="asg-instances">
+                    <div class="instance">EC2-1<br />1vCPU<br />1GB</div>
+                    <div class="instance">EC2-2<br />1vCPU<br />1GB</div>
+                    <div class="instance">EC2-N<br />Auto Scale</div>
+                  </div>
+                  <div class="ec2-image-actions">
+                    <div class="image-action">📤 Upload images to S3</div>
+                    <div class="image-action">🔗 Generate S3 URLs</div>
+                  </div>
+                </div>
+                <div class="service-box">
+                  <div class="service-title">🔧 Systems Manager</div>
+                  <div class="service-desc">Secure access<br />No SSH keys</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Storage & Services -->
+        <div class="external-services">
+          <div class="s3-cloudfront-stack">
+            <div class="external-box cloudfront-box">
+              <div class="service-title">⚡ CloudFront CDN</div>
+              <div class="service-desc">
+                Image delivery layer<br />Global caching
+              </div>
+              <div class="cache-status">
+                <div class="cache-hit">✅ Cache HIT</div>
+                <div class="cache-miss">⏳ Cache MISS → S3</div>
+              </div>
+            </div>
+            <div class="connection-line"></div>
+            <div class="external-box s3-box">
+              <div class="service-title">🪣 S3 Bucket - Image Storage</div>
+              <div class="service-desc">
+                Origin server<br />Persistent image storage
+              </div>
+              <div class="s3-image-flow">
+                <div class="upload-flow">⬆️ EC2 uploads images</div>
+                <div class="image-examples">
+                  <span class="img-file">user-avatar-123.jpg</span>
+                  <span class="img-file">product-photo-456.png</span>
+                  <span class="img-file">banner-image-789.webp</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">🔐 Certificate Manager</div>
+            <div class="service-desc">Free SSL/TLS<br />Auto-renewal</div>
+          </div>
+          <div class="external-box">
+            <div class="service-title">📊 CloudWatch</div>
+            <div class="service-desc">Monitoring<br />Metrics & Logs</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Flow Demo Section -->
+      <div class="image-flow-demo">
+        <h2 class="demo-title">🖼️ Real Image Request Flow</h2>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Frontend Code</h3>
+              <div class="code-block">
+                <code>
+                  &lt;img
+                  src="https://d1a2b3c4d5e6f7.cloudfront.net/uploads/user-avatar-123.jpg"
+                  alt="User Avatar"&gt;<br />
+                  &lt;img
+                  src="https://d1a2b3c4d5e6f7.cloudfront.net/products/laptop-hero-image.webp"&gt;<br />
+                  &lt;img
+                  src="https://d1a2b3c4d5e6f7.cloudfront.net/gallery/vacation-photo-456.jpg"&gt;
+                </code>
+              </div>
+              <p class="step-desc">
+                Your React/HTML frontend requests images via CloudFront URLs
+              </p>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>CloudFront Decision</h3>
+              <div class="decision-tree">
+                <div class="decision-node cache-hit-node">
+                  <strong>Cache HIT</strong><br />
+                  ⚡ Serve from edge location<br />
+                  <span class="response-time">~10ms response</span>
+                </div>
+                <div class="decision-or">OR</div>
+                <div class="decision-node cache-miss-node">
+                  <strong>Cache MISS</strong><br />
+                  📡 Fetch from S3 origin<br />
+                  <span class="response-time">~100ms first request</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>S3 Bucket Structure</h3>
+              <div class="s3-structure">
+                <div class="bucket-name">my-app-images-bucket/</div>
+                <div class="folder">
+                  ├── uploads/<br />
+                  │ ├── user-avatar-123.jpg<br />
+                  │ └── profile-pic-789.png<br />
+                  ├── products/<br />
+                  │ ├── laptop-hero-image.webp<br />
+                  │ └── phone-gallery-01.jpg<br />
+                  └── gallery/<br />
+                  ├── vacation-photo-456.jpg<br />
+                  └── concert-photo-890.jpg
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-examples">
+          <h3>Live Image Examples</h3>
+          <div class="example-images">
+            <div class="example-img">
+              <img
+                src="https://d1ad1447ikgzkh.cloudfront.net/uploads/user-avatar-123.jpg"
+                alt="Example user avatar"
+              />
+              <div class="img-url">
+                https://d1ad1447ikgzkh.cloudfront.net/uploads/user-avatar-123.jpg
+              </div>
+            </div>
+            <div class="example-img">
+              <img
+                src="https://d1ad1447ikgzkh.cloudfront.net/uploads/product-photo-456.png"
+                alt="Example product photo"
+              />
+              <div class="img-url">
+                https://d1ad1447ikgzkh.cloudfront.net/uploads/product-photo-456.png
+              </div>
+            </div>
+            <div class="example-img">
+              <img
+                src="https://d1ad1447ikgzkh.cloudfront.net/uploads/banner-image-789.webp"
+                alt="Example gallery image"
+              />
+              <div class="img-url">
+                https://d1ad1447ikgzkh.cloudfront.net/uploads/banner-image-789.webp
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-title">🖼️ Image Flow Architecture</div>
+          <ul class="feature-list">
+            <li>EC2 uploads user images to S3 bucket</li>
+            <li>Frontend requests images via CloudFront URLs</li>
+            <li>CloudFront serves cached images globally</li>
+            <li>Cache misses fetch from S3 origin</li>
+            <li>Automatic image optimization & compression</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">🛡️ Security Features</div>
+          <ul class="feature-list">
+            <li>Private subnet deployment</li>
+            <li>No public IP addresses</li>
+            <li>Systems Manager access</li>
+            <li>VPC network isolation</li>
+            <li>SSL/TLS encryption</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">🚀 Performance & Scaling</div>
+          <ul class="feature-list">
+            <li>Auto Scaling Group</li>
+            <li>Application Load Balancer</li>
+            <li>CloudFront CDN</li>
+            <li>Health check monitoring</li>
+            <li>Multi-AZ deployment</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-title">💰 Cost Optimization</div>
+          <ul class="feature-list">
+            <li>Right-sized instances (1vCPU, 1GB)</li>
+            <li>Free SSL certificates</li>
+            <li>Pay-as-you-scale model</li>
+            <li>S3 cost-effective storage</li>
+            <li>CloudFront reduces origin load</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="./assets/javascript/index.js"></script>
+  </body>
+</html>

@@ -1,6 +1,5 @@
 module "webapp_vpc" {
   source = "./modules/vpc"
-
   vpc_cidr           = "10.0.0.0/16"
   subnet_cidrs       = ["10.0.1.0/24", "10.0.2.0/24"]
   availability_zones = ["eu-west-2a", "eu-west-2b"]
@@ -28,7 +27,6 @@ module "images_bucket" {
   ]
 }
 
-# Add this after your module declarations
 data "aws_iam_policy_document" "cloudfront_s3_access" {
   statement {
     sid    = "AllowCloudFrontServicePrincipal"
@@ -59,3 +57,26 @@ resource "aws_s3_bucket_policy" "cloudfront_access" {
   bucket = module.images_bucket.bucket_id
   policy = data.aws_iam_policy_document.cloudfront_s3_access.json
 }
+
+module "web_ec2" {
+  source              = "./modules/ec2"
+  vpc_id              = module.webapp_vpc.vpc_id
+  private_subnet_ids  = module.webapp_vpc.private_subnets
+  alb_sg_id           = module.alb.alb_sg_id
+  target_group_arn    = module.alb.target_group_arn 
+  ami                 = "ami-0c101f26f147fa7fd"
+  instance_type       = "t3.micro"
+  key_name            = "secret-key"
+  desired_capacity    = 1
+  min_size            = 1
+  max_size            = 2
+}
+
+module "alb" {
+  source            = "./modules/alb"
+  vpc_id            = module.webapp_vpc.vpc_id
+  public_subnet_ids = module.webapp_vpc.public_subnets
+  instance_ids      = [module.ec2.instance_id]  
+}
+
+
