@@ -1,11 +1,19 @@
+resource "random_string" "suffix" {
+  length  = 6           # number of random characters
+  upper   = false       # lowercase only
+  special = false       # no special characters
+}
+
+
 resource "aws_s3_bucket" "this" {
-  bucket = var.bucket_name
+  bucket = "${var.bucket_name}-${random_string.suffix.result}"
 
   tags = {
-    Name        = var.bucket_name
+    Name        = "${var.bucket_name}-${random_string.suffix.result}"
     Environment = "dev"
   }
 }
+
 
 resource "aws_s3_bucket_versioning" "this" {
   bucket = aws_s3_bucket.this.id

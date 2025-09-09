@@ -17,9 +17,7 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "alb-sg"
-  }
+  tags = { Name = "alb-sg" }
 }
 
 resource "aws_lb" "web_alb" {
@@ -37,12 +35,13 @@ resource "aws_lb_target_group" "web_tg" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = var.vpc_id
-  
+
   health_check {
     path = "/"
     port = "80"
   }
 }
+
 resource "aws_lb_listener" "web_listener" {
   load_balancer_arn = aws_lb.web_alb.arn
   port              = "80"
