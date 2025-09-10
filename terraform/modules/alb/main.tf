@@ -1,3 +1,7 @@
+# The purpose of a security group is to allow HTTP traffic from the internet to the ALB.
+# The ALB will then forward this traffic to the web EC2 instances in private subnets.
+# The ALB needs to be in public subnets to be accessible from the internet.
+
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
   description = "Allow HTTP traffic from internet"
@@ -26,7 +30,6 @@ resource "aws_lb" "web_alb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = var.public_subnet_ids
-
   enable_deletion_protection = false
 }
 

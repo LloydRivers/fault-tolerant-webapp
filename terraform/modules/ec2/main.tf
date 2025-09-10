@@ -26,6 +26,9 @@ resource "aws_launch_template" "web_lt" {
   instance_type = var.instance_type
   key_name      = var.key_name
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+  iam_instance_profile {
+    name = aws_iam_instance_profile.web_ssm_profile.name
+  }
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
@@ -33,11 +36,11 @@ resource "aws_launch_template" "web_lt" {
     systemctl enable httpd
     systemctl start httpd
 
-    cat <<'EOT' > /var/www/html/index.html
+    cat <<EOT > /var/www/html/index.html
     ${file("${path.module}/index.html")}
     EOT
-    EOF
-  )
+  EOF
+)
 }
 
 resource "aws_autoscaling_group" "web_asg" {
@@ -61,6 +64,28 @@ resource "aws_autoscaling_group" "web_asg" {
     propagate_at_launch = true
   }
 }
-/*
 
-*/
+
+resource "aws_iam_role" "web_ssm_role" {
+  name = "web-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "web_ssm_attach" {
+  role       = aws_iam_role.web_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "web_ssm_profile" {
+  name = "web-ssm-instance-profile"
+  role = aws_iam_role.web_ssm_role.name
+}
+
