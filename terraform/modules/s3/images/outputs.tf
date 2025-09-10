@@ -11,3 +11,7 @@ output "bucket_id" {
 output "bucket_arn" {
   value = aws_s3_bucket.this.arn
 }
+
+output "object_versions" {
+  value = { for k, obj in aws_s3_object.objects : k => obj.version_id }
+}

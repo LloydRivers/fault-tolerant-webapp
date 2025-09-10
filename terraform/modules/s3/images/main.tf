@@ -1,7 +1,7 @@
 resource "random_string" "suffix" {
-  length  = 6           # number of random characters
-  upper   = false       # lowercase only
-  special = false       # no special characters
+  length  = 6           
+  upper   = false       
+  special = false       
 }
 
 
@@ -10,7 +10,7 @@ resource "aws_s3_bucket" "this" {
 
   tags = {
     Name        = "${var.bucket_name}-${random_string.suffix.result}"
-    Environment = "dev"
+    Environment = var.environment
   }
 }
 
@@ -31,7 +31,23 @@ resource "aws_s3_object" "objects" {
   source = each.value.source
 
   server_side_encryption = "AES256"
+
+  content_type = lookup(
+    {
+      "html" = "text/html",
+      "css"  = "text/css",
+      "js"   = "application/javascript",
+      "jpg"  = "image/jpeg",
+      "jpeg" = "image/jpeg",
+      "png"  = "image/png",
+      "gif"  = "image/gif",
+      "webp" = "image/webp"
+    },
+    split(".", each.value.key)[length(split(".", each.value.key)) - 1],
+    "application/octet-stream"
+  )
 }
+
 
 resource "aws_s3_bucket_policy" "cloudfront_access" {
   count  = var.enable_cloudfront && var.cloudfront_distribution_arn != "" ? 1 : 0
@@ -58,6 +74,4 @@ resource "aws_s3_bucket_policy" "cloudfront_access" {
 }
 
 
-output "object_versions" {
-  value = { for k, obj in aws_s3_object.objects : k => obj.version_id }
-}
+

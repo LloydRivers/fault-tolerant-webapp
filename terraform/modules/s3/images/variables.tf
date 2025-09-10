@@ -17,6 +17,11 @@ variable "objects" {
   }))
   default = []
 }
+variable "environment" {
+  description = "Environment tag"
+  type        = string
+  default     = "dev"
+}
 
 variable "default_root_object" {
   description = "Default root object for CloudFront"

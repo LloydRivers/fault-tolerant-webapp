@@ -45,18 +45,19 @@ data "aws_iam_policy_document" "cloudfront_s3_access" {
 resource "aws_s3_bucket_policy" "cloudfront_access" {
   bucket = module.images_bucket.bucket_id
   policy = data.aws_iam_policy_document.cloudfront_s3_access.json
+  depends_on = [module.cdn] 
 }
 
 # --- S3 Bucket for App ---
 module "app_bucket" {
-  source            = "./modules/app/s3"
+  source            = "./modules/s3/app"
   bucket_name       = "my-fault-tolerant-app-static-bucket"
   enable_cloudfront = true
 
   objects = [
     { key = "index.html", source = "app/index.html" },
-    { key = "styles.css", source = "app/assets/styles/index.css" },
-    { key = "app.js", source = "app/assets/javascript/index.js" }
+    { key = "index.css", source = "app/assets/styles/index.css" },
+    { key = "index.js", source = "app/assets/javascript/index.js" }
   ]
 }
 
@@ -95,4 +96,5 @@ data "aws_iam_policy_document" "app_cloudfront_s3_access" {
 resource "aws_s3_bucket_policy" "app_cloudfront_access" {
   bucket = module.app_bucket.bucket_id
   policy = data.aws_iam_policy_document.app_cloudfront_s3_access.json
+  depends_on = [module.app_cdn]
 }

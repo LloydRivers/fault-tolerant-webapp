@@ -21,6 +21,8 @@ resource "aws_s3_bucket_versioning" "this" {
   }
 }
 
+
+
 resource "aws_s3_object" "objects" {
   for_each = { for obj in var.objects : obj.key => obj }
 
@@ -29,7 +31,23 @@ resource "aws_s3_object" "objects" {
   source = each.value.source
 
   server_side_encryption = "AES256"
+
+  content_type = lookup(
+    {
+      "html" = "text/html",
+      "css"  = "text/css",
+      "js"   = "application/javascript",
+      "jpg"  = "image/jpeg",
+      "jpeg" = "image/jpeg",
+      "png"  = "image/png",
+      "gif"  = "image/gif",
+      "webp" = "image/webp"
+    },
+    split(".", each.value.key)[length(split(".", each.value.key)) - 1],
+    "application/octet-stream"
+  )
 }
+
 
 resource "aws_s3_bucket_policy" "cloudfront_access" {
   count  = var.enable_cloudfront && var.cloudfront_distribution_arn != "" ? 1 : 0
