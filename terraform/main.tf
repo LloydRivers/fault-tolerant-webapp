@@ -54,9 +54,9 @@ module "app_bucket" {
   enable_cloudfront = true
 
   objects = [
-    { key = "index.html", source = "app/dist/index.html" },
-    { key = "styles.css", source = "app/dist/styles.css" },
-    { key = "app.js", source = "app/dist/app.js" }
+    { key = "index.html", source = "app/index.html" },
+    { key = "styles.css", source = "app/assets/styles/index.css" },
+    { key = "app.js", source = "app/assets/javascript/index.js" }
   ]
 }
 
